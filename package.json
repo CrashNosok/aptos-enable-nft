@@ -1,0 +1,20 @@
+{
+  "name": "aptos-enable-nft",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "keywords": [
+    "aptos",
+    "graffio",
+    "graffiti"
+  ],
+  "author": "tg: @semolina_code_python",
+  "license": "ISC",
+  "dependencies": {
+    "aptos": "^1.20.0",
+    "console-stamp": "^3.1.2",
+    "https-proxy-agent": "^7.0.2",
+    "node-fetch": "^3.3.2"
+  }
+}
