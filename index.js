@@ -104,7 +104,7 @@ async function waitForTransactionProxy(txnHash, proxy) {
 async function sendTransaction(sender, payload, proxy) {
     try {
         const txnRequest = await client.generateTransaction(sender.address(), payload, {
-            max_gas_amount: generateRandomNumber(700, 2000),
+            max_gas_amount: generateRandomNumber(1500, 2000),
         });
 
         const signedTxn = await client.signTransaction(sender, txnRequest);
