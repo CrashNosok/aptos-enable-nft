@@ -82,12 +82,12 @@ async function accountResourceProxy(accountAddress, proxy) {
     };
     const response = await fetch(url, requestOptions);
     if (response.status == 404) {
-        throw new Error(`ResourceNotFound: ${response.status}`);
+        return 'ResourceNotFound';
     }
     if (response.status >= 400) {
         throw new Error(`ApiError: ${response.status}`);
     }
-    return await response.json()
+    return await response.json();
 }
 
 async function waitForTransactionProxy(txnHash, proxy) {
@@ -193,6 +193,11 @@ async function checkBalance(account) {
         let pk = privateKeys[i]
         let proxy = proxies[i]
 
+        if (!proxy || !pk) {
+            i++;
+            continue;
+        }
+
         if (!proxy.includes('://')) {
             proxy = 'http://' + proxy
         }
@@ -205,9 +210,9 @@ async function checkBalance(account) {
         const address = account.address().hex();
         const accountResource = await accountResourceProxy(address, proxy);
         const opt_in_events = accountResource?.data?.opt_in_events.counter;
-    
         console.log(`address: ${address} | opt_in_events: ${opt_in_events} | balance: ${balance}`);
-        if (!opt_in_events && balance > 0) {
+    
+        if ((accountResource === 'ResourceNotFound' || !opt_in_events) && balance > 0) {
             await enable_nft(account, proxy);
             console.log("-".repeat(130));
             await timeout(config.sleep)
