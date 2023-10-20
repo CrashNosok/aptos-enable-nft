@@ -38,8 +38,8 @@ async function submitTransactionProxy(signedTxn, proxy) {
         const response = await fetch(`${config.rpc}/transactions`, requestOptions);
     
         if (response.status >= 400) {
-          const errorText = await response.text();
-          throw new Error(`ApiError: ${errorText}, Status Code: ${response.status}`);
+            const errorText = await response.text();
+            throw new Error(`ApiError: ${errorText}, Status Code: ${response.status}`);
         }
     
         const responseData = await response.json();
@@ -71,6 +71,23 @@ async function transactionPendingProxy(txnHash, proxy) {
         throw new Error(`ApiError: ${response.text}, Status Code: ${response.status}`);
     }
     return response.type === 'pending_transaction';
+}
+
+async function accountResourceProxy(accountAddress, proxy) {
+    const url = `${config.rpc}/accounts/${accountAddress}/resource/0x3::token_event_store::TokenEventStoreV1`;
+    const proxyAgent = new HttpsProxyAgent(proxy);
+    const requestOptions = {
+        method: 'GET',
+        agent: proxyAgent,
+    };
+    const response = await fetch(url, requestOptions);
+    if (response.status == 404) {
+        throw new Error(`ResourceNotFound: ${response.status}`);
+    }
+    if (response.status >= 400) {
+        throw new Error(`ApiError: ${response.status}`);
+    }
+    return await response.json()
 }
 
 async function waitForTransactionProxy(txnHash, proxy) {
@@ -185,10 +202,12 @@ async function checkBalance(account) {
 
         const account = new AptosAccount(Uint8Array.from(Buffer.from(pk, 'hex')));
         const balance = await checkBalance(account)
-
-        console.log(account.address().hex());
-
-        if (balance > 0) {
+        const address = account.address().hex();
+        const accountResource = await accountResourceProxy(address, proxy);
+        const opt_in_events = accountResource?.data?.opt_in_events.counter;
+    
+        console.log(`address: ${address} | opt_in_events: ${opt_in_events} | balance: ${balance}`);
+        if (!opt_in_events && balance > 0) {
             await enable_nft(account, proxy);
             console.log("-".repeat(130));
             await timeout(config.sleep)
